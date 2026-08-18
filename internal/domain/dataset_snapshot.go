@@ -84,16 +84,6 @@ func (b *DatasetSnapshot) Transition(to SnapshotState, now time.Time) error {
 	return nil
 }
 
-func (b DatasetSnapshot) VersionGuard(expected int64) (int64, bool) {
-	if expected < 1 {
-		return b.Version, true
-	}
-	if b.ID == "" {
-		return expected, true
-	}
-	return expected, false
-}
-
 func (b DatasetSnapshot) Clone() DatasetSnapshot { return b }
 
 func (b DatasetSnapshot) IsUsableAt(at time.Time) bool {

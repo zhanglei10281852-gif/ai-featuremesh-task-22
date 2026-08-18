@@ -93,15 +93,10 @@ func (q *queries) UpdateDatasetSnapshot(ctx context.Context, batch domain.Datase
 	if err := batch.Validate(); err != nil {
 		return err
 	}
-	guard, enforce := batch.VersionGuard(expectedVersion)
-	query := `UPDATE dataset_snapshots SET state = ?, run_id = ?, quarantine_note = ?,
-		expires_at = ?, version = version + 1, updated_at = ? WHERE id = ?`
-	args := []any{batch.State, nullableString(batch.InferenceRunID), batch.QuarantineNote, formatTime(batch.ExpiresAt), formatTime(batch.UpdatedAt), batch.ID}
-	if enforce {
-		query += " AND version = ?"
-		args = append(args, guard)
-	}
-	result, err := q.q.ExecContext(ctx, query, args...)
+	result, err := q.q.ExecContext(ctx, `UPDATE dataset_snapshots SET state = ?, run_id = ?, quarantine_note = ?,
+        expires_at = ?, version = version + 1, updated_at = ? WHERE id = ? AND version = ?`, batch.State,
+		nullableString(batch.InferenceRunID), batch.QuarantineNote, formatTime(batch.ExpiresAt), formatTime(batch.UpdatedAt),
+		batch.ID, expectedVersion)
 	if err != nil {
 		return translateError("update snapshot batch", err)
 	}
